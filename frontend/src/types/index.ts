@@ -2502,6 +2502,19 @@ export interface TotpLogin2FARequest {
 
 // ==================== Scheduled Test Types ====================
 
+export interface ScheduledTestDetectorConfig {
+  api: 'auto' | 'responses' | 'chat_completions' | 'messages'
+  count: number
+  parallel: number
+  timeout_sec: number
+  rounds: number
+  no_stream: boolean
+  strict: boolean
+  effort: string
+  service_tier: 'flex' | 'default' | 'fast' | 'ultrafast'
+  allow_family_match: boolean
+}
+
 export interface ScheduledTestPlan {
   id: number
   account_id: number
@@ -2510,6 +2523,9 @@ export interface ScheduledTestPlan {
   enabled: boolean
   max_results: number
   auto_recover: boolean
+  test_mode: 'liveness' | 'fingerprint'
+  auto_disable: boolean
+  detector_config: ScheduledTestDetectorConfig
   last_run_at: string | null
   next_run_at: string | null
   created_at: string
@@ -2523,6 +2539,14 @@ export interface ScheduledTestResult {
   response_text: string
   error_message: string
   latency_ms: number
+  verdict: string
+  expected_model: string
+  detected_model: string
+  detected_model_name: string
+  detected_family: string
+  probability: number | null
+  account_action: string
+  detail: Record<string, unknown> | null
   started_at: string
   finished_at: string
   created_at: string
@@ -2535,6 +2559,9 @@ export interface CreateScheduledTestPlanRequest {
   enabled?: boolean
   max_results?: number
   auto_recover?: boolean
+  test_mode?: 'liveness' | 'fingerprint'
+  auto_disable?: boolean
+  detector_config?: ScheduledTestDetectorConfig
 }
 
 export interface UpdateScheduledTestPlanRequest {
@@ -2543,8 +2570,70 @@ export interface UpdateScheduledTestPlanRequest {
   enabled?: boolean
   max_results?: number
   auto_recover?: boolean
+  test_mode?: 'liveness' | 'fingerprint'
+  auto_disable?: boolean
+  detector_config?: ScheduledTestDetectorConfig
 }
 
+// ==================== Model Fingerprint Batch Types ====================
+
+export type ModelFingerprintBatchRunStatus = 'pending' | 'running' | 'cancelling' | 'completed' | 'cancelled' | 'failed'
+export type ModelFingerprintBatchResultStatus = 'pending' | 'running' | 'success' | 'failed' | 'cancelled'
+export type ModelFingerprintBatchVerdict = 'match' | 'mismatch' | 'invalid_reply' | 'error' | 'unsupported' | ''
+
+export interface ModelFingerprintBatchRun {
+  id: number
+  account_id: number
+  status: ModelFingerprintBatchRunStatus
+  models: string[]
+  detector_config: ScheduledTestDetectorConfig
+  concurrency: number
+  total_models: number
+  completed_models: number
+  matched_models: number
+  mismatched_models: number
+  failed_models: number
+  unsupported_models: number
+  cancelled_models: number
+  estimated_requests: number
+  error_message: string
+  terminal_reason: string
+  started_at: string | null
+  finished_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ModelFingerprintBatchResult {
+  id: number
+  run_id: number
+  position: number
+  model_id: string
+  status: ModelFingerprintBatchResultStatus
+  verdict: ModelFingerprintBatchVerdict | null
+  expected_model: string
+  detected_model: string
+  detected_model_name: string
+  detected_family: string
+  probability: number | null
+  latency_ms: number
+  error_message: string
+  detail: Record<string, unknown> | null
+  detail_truncated: boolean
+  started_at: string | null
+  finished_at: string | null
+}
+
+export interface ModelFingerprintBatchRunDetail {
+  run: ModelFingerprintBatchRun
+  results: ModelFingerprintBatchResult[]
+}
+
+export interface CreateModelFingerprintBatchRequest {
+  models: string[]
+  concurrency?: number
+  detector_config?: ScheduledTestDetectorConfig
+}
 // Payment types
 export type { SubscriptionPlan, PaymentOrder, CheckoutInfoResponse } from './payment'
 

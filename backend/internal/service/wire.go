@@ -282,6 +282,29 @@ func ProvideAccountTestService(
 	return service
 }
 
+// ProvideModelFingerprintService creates the lm-detector fingerprint tester
+// used by scheduled account tests (test_mode=fingerprint).
+func ProvideModelFingerprintService(
+	accountRepo AccountRepository,
+	httpUpstream HTTPUpstream,
+	tlsFPProfileService *TLSFingerprintProfileService,
+	cfg *config.Config,
+) *ModelFingerprintService {
+	return NewModelFingerprintService(accountRepo, httpUpstream, tlsFPProfileService, cfg)
+}
+
+// ProvideModelFingerprintBatchService creates the batch fingerprint service and
+// cleans up runs interrupted by a previous process.
+func ProvideModelFingerprintBatchService(
+	accountRepo AccountRepository,
+	fingerprintSvc *ModelFingerprintService,
+	repo ModelFingerprintBatchRepository,
+) *ModelFingerprintBatchService {
+	svc := NewModelFingerprintBatchService(accountRepo, fingerprintSvc, repo)
+	svc.Start()
+	return svc
+}
+
 func ProvideGrokQuotaService(
 	accountRepo AccountRepository,
 	proxyRepo ProxyRepository,
@@ -660,10 +683,12 @@ func ProvideScheduledTestRunnerService(
 	planRepo ScheduledTestPlanRepository,
 	scheduledSvc *ScheduledTestService,
 	accountTestSvc *AccountTestService,
+	fingerprintSvc *ModelFingerprintService,
+	accountRepo AccountRepository,
 	rateLimitSvc *RateLimitService,
 	cfg *config.Config,
 ) *ScheduledTestRunnerService {
-	svc := NewScheduledTestRunnerService(planRepo, scheduledSvc, accountTestSvc, rateLimitSvc, cfg)
+	svc := NewScheduledTestRunnerService(planRepo, scheduledSvc, accountTestSvc, fingerprintSvc, accountRepo, rateLimitSvc, cfg)
 	svc.Start()
 	return svc
 }
@@ -970,6 +995,8 @@ var ProviderSet = wire.NewSet(
 	ProvideIdempotencyCleanupService,
 	ProvideScheduledTestService,
 	ProvideScheduledTestRunnerService,
+	ProvideModelFingerprintService,
+	ProvideModelFingerprintBatchService,
 	NewGroupCapacityService,
 	NewChannelService,
 	wire.Bind(new(ChannelCacheInvalidator), new(*ChannelService)),

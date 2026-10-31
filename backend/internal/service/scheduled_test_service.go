@@ -27,7 +27,8 @@ func NewScheduledTestService(
 	}
 }
 
-// CreatePlan validates the cron expression, computes next_run_at, and persists the plan.
+// CreatePlan validates the cron expression, test mode and detector config,
+// computes next_run_at, and persists the plan.
 func (s *ScheduledTestService) CreatePlan(ctx context.Context, plan *ScheduledTestPlan) (*ScheduledTestPlan, error) {
 	nextRun, err := computeNextRun(plan.CronExpression, time.Now())
 	if err != nil {
@@ -37,6 +38,10 @@ func (s *ScheduledTestService) CreatePlan(ctx context.Context, plan *ScheduledTe
 
 	if plan.MaxResults <= 0 {
 		plan.MaxResults = 50
+	}
+
+	if err := normalizePlanTestOptions(plan); err != nil {
+		return nil, err
 	}
 
 	return s.planRepo.Create(ctx, plan)
@@ -52,13 +57,17 @@ func (s *ScheduledTestService) ListPlansByAccount(ctx context.Context, accountID
 	return s.planRepo.ListByAccountID(ctx, accountID)
 }
 
-// UpdatePlan validates cron and updates the plan.
+// UpdatePlan validates cron, test mode and detector config, then updates the plan.
 func (s *ScheduledTestService) UpdatePlan(ctx context.Context, plan *ScheduledTestPlan) (*ScheduledTestPlan, error) {
 	nextRun, err := computeNextRun(plan.CronExpression, time.Now())
 	if err != nil {
 		return nil, fmt.Errorf("invalid cron expression: %w", err)
 	}
 	plan.NextRunAt = &nextRun
+
+	if err := normalizePlanTestOptions(plan); err != nil {
+		return nil, err
+	}
 
 	return s.planRepo.Update(ctx, plan)
 }
@@ -83,6 +92,24 @@ func (s *ScheduledTestService) SaveResult(ctx context.Context, planID int64, max
 		return err
 	}
 	return s.resultRepo.PruneOldResults(ctx, planID, maxResults)
+}
+
+// normalizePlanTestOptions validates test_mode and fills detector_config defaults
+// in place. It is shared by CreatePlan and UpdatePlan.
+func normalizePlanTestOptions(plan *ScheduledTestPlan) error {
+	testMode, err := NormalizeTestMode(plan.TestMode)
+	if err != nil {
+		return err
+	}
+	plan.TestMode = testMode
+
+	cfg, err := NormalizeDetectorConfig(plan.DetectorConfig)
+	if err != nil {
+		return err
+	}
+	plan.DetectorConfig = cfg
+
+	return nil
 }
 
 func computeNextRun(cronExpr string, from time.Time) (time.Time, error) {

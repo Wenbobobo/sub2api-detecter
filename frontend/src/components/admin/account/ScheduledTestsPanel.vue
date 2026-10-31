@@ -90,20 +90,171 @@
               placeholder="100"
             />
           </div>
-          <div class="flex items-end">
-            <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-              <Toggle v-model="newPlan.enabled" />
-              {{ t('admin.scheduledTests.enabled') }}
-            </label>
+          <div class="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2">
+            <div class="flex items-start">
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <Toggle v-model="newPlan.enabled" />
+                {{ t('admin.scheduledTests.enabled') }}
+              </label>
+            </div>
+            <div class="flex items-start">
+              <div>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <Toggle
+                    data-testid="new-fingerprint-toggle"
+                    :model-value="newPlan.test_mode === 'fingerprint'"
+                    @update:model-value="(val: boolean) => (newPlan.test_mode = val ? 'fingerprint' : 'liveness')"
+                  />
+                  {{ t('admin.scheduledTests.fingerprintTest') }}
+                </label>
+                <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                  {{ t('admin.scheduledTests.fingerprintTestHelp') }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <Toggle v-model="newPlan.auto_recover" />
+                  {{ t('admin.scheduledTests.autoRecover') }}
+                </label>
+                <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                  {{ t('admin.scheduledTests.autoRecoverHelp') }}
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start">
+              <div>
+                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <Toggle data-testid="new-auto-disable-toggle" v-model="newPlan.auto_disable" />
+                  {{ t('admin.scheduledTests.autoDisable') }}
+                </label>
+                <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                  {{ t('admin.scheduledTests.autoDisableHelp') }}
+                </p>
+              </div>
+            </div>
           </div>
-          <div class="flex items-end">
+        </div>
+        <div
+          data-testid="new-detector-params"
+          :class="[
+            'mt-3 rounded-lg border border-indigo-100 bg-white/60 p-3 transition-opacity dark:border-indigo-900/50 dark:bg-dark-800/40',
+            newDetectorDisabled ? 'pointer-events-none select-none opacity-50' : ''
+          ]"
+        >
+          <div class="text-xs font-medium text-gray-700 dark:text-gray-300">
+            {{ t('admin.scheduledTests.fingerprintParams') }}
+          </div>
+          <p class="mb-2 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+            {{ t('admin.scheduledTests.fingerprintParamsHelp') }}
+          </p>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                {{ t('admin.scheduledTests.detectorApi') }}
+              </label>
+              <Select
+                data-testid="new-detector-api"
+                v-model="newPlan.detector.api"
+                :options="detectorApiOptions"
+                :disabled="newDetectorDisabled"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                {{ t('admin.scheduledTests.detectorCount') }}
+              </label>
+              <Input
+                data-testid="new-detector-count"
+                v-model="newPlan.detector.count"
+                type="number"
+                placeholder="1-3"
+                :disabled="newDetectorDisabled"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                {{ t('admin.scheduledTests.detectorParallel') }}
+              </label>
+              <Input
+                data-testid="new-detector-parallel"
+                v-model="newPlan.detector.parallel"
+                type="number"
+                placeholder="1-3"
+                :disabled="newDetectorDisabled"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                {{ t('admin.scheduledTests.detectorTimeout') }}
+              </label>
+              <Input
+                data-testid="new-detector-timeout_sec"
+                v-model="newPlan.detector.timeout_sec"
+                type="number"
+                placeholder="1-600"
+                :disabled="newDetectorDisabled"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                {{ t('admin.scheduledTests.detectorRounds') }}
+              </label>
+              <Input
+                data-testid="new-detector-rounds"
+                v-model="newPlan.detector.rounds"
+                type="number"
+                placeholder="1-5"
+                :disabled="newDetectorDisabled"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                {{ t('admin.scheduledTests.detectorEffort') }}
+              </label>
+              <Input
+                data-testid="new-detector-effort"
+                v-model="newPlan.detector.effort"
+                :placeholder="t('admin.scheduledTests.detectorEffortPlaceholder')"
+                :disabled="newDetectorDisabled"
+              />
+            </div>
+            <div>
+              <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                {{ t('admin.scheduledTests.detectorServiceTier') }}
+              </label>
+              <Select
+                data-testid="new-detector-service-tier"
+                v-model="newPlan.detector.service_tier"
+                :options="detectorServiceTierOptions"
+                :disabled="newDetectorDisabled"
+              />
+            </div>
+          </div>
+          <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
               <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                <Toggle v-model="newPlan.auto_recover" />
-                {{ t('admin.scheduledTests.autoRecover') }}
+                <Toggle v-model="newPlan.detector.no_stream" :disabled="newDetectorDisabled" />
+                {{ t('admin.scheduledTests.detectorNoStream') }}
+              </label>
+            </div>
+            <div>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <Toggle v-model="newPlan.detector.strict" :disabled="newDetectorDisabled" />
+                {{ t('admin.scheduledTests.detectorStrict') }}
               </label>
               <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                {{ t('admin.scheduledTests.autoRecoverHelp') }}
+                {{ t('admin.scheduledTests.detectorStrictHelp') }}
+              </p>
+            </div>
+            <div>
+              <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                <Toggle v-model="newPlan.detector.allow_family_match" :disabled="newDetectorDisabled" />
+                {{ t('admin.scheduledTests.detectorAllowFamilyMatch') }}
+              </label>
+              <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                {{ t('admin.scheduledTests.detectorAllowFamilyMatchHelp') }}
               </p>
             </div>
           </div>
@@ -183,6 +334,24 @@
                 class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
               >
                 {{ t('admin.scheduledTests.autoRecover') }}
+              </span>
+
+              <!-- Fingerprint Badge -->
+              <span
+                v-if="plan.test_mode === 'fingerprint'"
+                data-testid="plan-fingerprint-badge"
+                class="inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300"
+              >
+                {{ t('admin.scheduledTests.fingerprintTest') }}
+              </span>
+
+              <!-- Auto Disable Badge -->
+              <span
+                v-if="plan.auto_disable"
+                data-testid="plan-auto-disable-badge"
+                class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+              >
+                {{ t('admin.scheduledTests.autoDisable') }}
               </span>
             </div>
 
@@ -300,20 +469,172 @@
                   placeholder="100"
                 />
               </div>
-              <div class="flex items-end">
-                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <Toggle v-model="editForm.enabled" />
-                  {{ t('admin.scheduledTests.enabled') }}
-                </label>
+              <div class="grid grid-cols-1 gap-3 sm:col-span-2 sm:grid-cols-2">
+                <div class="flex items-start">
+                  <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Toggle v-model="editForm.enabled" />
+                    {{ t('admin.scheduledTests.enabled') }}
+                  </label>
+                </div>
+                <div class="flex items-start">
+                  <div>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <Toggle
+                        data-testid="edit-fingerprint-toggle"
+                        :model-value="editForm.test_mode === 'fingerprint'"
+                        @update:model-value="(val: boolean) => (editForm.test_mode = val ? 'fingerprint' : 'liveness')"
+                      />
+                      {{ t('admin.scheduledTests.fingerprintTest') }}
+                    </label>
+                    <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                      {{ t('admin.scheduledTests.fingerprintTestHelp') }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <div>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <Toggle v-model="editForm.auto_recover" />
+                      {{ t('admin.scheduledTests.autoRecover') }}
+                    </label>
+                    <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                      {{ t('admin.scheduledTests.autoRecoverHelp') }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <div>
+                    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <Toggle data-testid="edit-auto-disable-toggle" v-model="editForm.auto_disable" />
+                      {{ t('admin.scheduledTests.autoDisable') }}
+                    </label>
+                    <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                      {{ t('admin.scheduledTests.autoDisableHelp') }}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div class="flex items-end">
+            </div>
+            <div
+              data-testid="edit-detector-params"
+              :class="[
+                'mt-3 rounded-lg border border-indigo-100 bg-white/60 p-3 transition-opacity dark:border-indigo-900/50 dark:bg-dark-800/40',
+                editDetectorDisabled ? 'pointer-events-none select-none opacity-50' : ''
+              ]"
+              :disabled="editDetectorDisabled"
+            >
+              <div class="text-xs font-medium text-gray-700 dark:text-gray-300">
+                {{ t('admin.scheduledTests.fingerprintParams') }}
+              </div>
+              <p class="mb-2 mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                {{ t('admin.scheduledTests.fingerprintParamsHelp') }}
+              </p>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {{ t('admin.scheduledTests.detectorApi') }}
+                  </label>
+                  <Select
+                    data-testid="edit-detector-api"
+                    v-model="editForm.detector.api"
+                    :options="detectorApiOptions"
+                    :disabled="editDetectorDisabled"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {{ t('admin.scheduledTests.detectorCount') }}
+                  </label>
+                  <Input
+                    data-testid="edit-detector-count"
+                    v-model="editForm.detector.count"
+                    type="number"
+                    placeholder="1-3"
+                    :disabled="editDetectorDisabled"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {{ t('admin.scheduledTests.detectorParallel') }}
+                  </label>
+                  <Input
+                    data-testid="edit-detector-parallel"
+                    v-model="editForm.detector.parallel"
+                    type="number"
+                    placeholder="1-3"
+                    :disabled="editDetectorDisabled"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {{ t('admin.scheduledTests.detectorTimeout') }}
+                  </label>
+                  <Input
+                    data-testid="edit-detector-timeout_sec"
+                    v-model="editForm.detector.timeout_sec"
+                    type="number"
+                    placeholder="1-600"
+                    :disabled="editDetectorDisabled"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {{ t('admin.scheduledTests.detectorRounds') }}
+                  </label>
+                  <Input
+                    data-testid="edit-detector-rounds"
+                    v-model="editForm.detector.rounds"
+                    type="number"
+                    placeholder="1-5"
+                    :disabled="editDetectorDisabled"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {{ t('admin.scheduledTests.detectorEffort') }}
+                  </label>
+                  <Input
+                    data-testid="edit-detector-effort"
+                    v-model="editForm.detector.effort"
+                    :placeholder="t('admin.scheduledTests.detectorEffortPlaceholder')"
+                    :disabled="editDetectorDisabled"
+                  />
+                </div>
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {{ t('admin.scheduledTests.detectorServiceTier') }}
+                  </label>
+                  <Select
+                    data-testid="edit-detector-service-tier"
+                    v-model="editForm.detector.service_tier"
+                    :options="detectorServiceTierOptions"
+                    :disabled="editDetectorDisabled"
+                  />
+                </div>
+              </div>
+              <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div>
                   <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                    <Toggle v-model="editForm.auto_recover" />
-                    {{ t('admin.scheduledTests.autoRecover') }}
+                    <Toggle v-model="editForm.detector.no_stream" :disabled="editDetectorDisabled" />
+                    {{ t('admin.scheduledTests.detectorNoStream') }}
+                  </label>
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Toggle v-model="editForm.detector.strict" :disabled="editDetectorDisabled" />
+                    {{ t('admin.scheduledTests.detectorStrict') }}
                   </label>
                   <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
-                    {{ t('admin.scheduledTests.autoRecoverHelp') }}
+                    {{ t('admin.scheduledTests.detectorStrictHelp') }}
+                  </p>
+                </div>
+                <div>
+                  <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Toggle v-model="editForm.detector.allow_family_match" :disabled="editDetectorDisabled" />
+                    {{ t('admin.scheduledTests.detectorAllowFamilyMatch') }}
+                  </label>
+                  <p class="mt-0.5 text-xs text-gray-400 dark:text-gray-500">
+                    {{ t('admin.scheduledTests.detectorAllowFamilyMatchHelp') }}
                   </p>
                 </div>
               </div>
@@ -368,24 +689,28 @@
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <!-- Status Badge -->
+                    <!-- Status / Verdict Badge -->
                     <span
-                      :class="[
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                        result.status === 'success'
-                          ? 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400'
-                          : result.status === 'running'
-                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400'
-                            : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400'
-                      ]"
+                      data-testid="result-status-badge"
+                      :class="['inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium', resultBadgeClass(result)]"
                     >
-                      {{
-                        result.status === 'success'
-                          ? t('admin.scheduledTests.success')
-                          : result.status === 'running'
-                            ? t('admin.scheduledTests.running')
-                            : t('admin.scheduledTests.failed')
-                      }}
+                      {{ resultBadgeLabel(result) }}
+                    </span>
+
+                    <!-- Account Action -->
+                    <span
+                      v-if="result.account_action === 'disabled'"
+                      data-testid="result-account-action"
+                      class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+                    >
+                      {{ t('admin.scheduledTests.accountActionDisabled') }}
+                    </span>
+                    <span
+                      v-else-if="result.account_action === 'restored'"
+                      data-testid="result-account-action"
+                      class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
+                    >
+                      {{ t('admin.scheduledTests.accountActionRestored') }}
                     </span>
 
                     <!-- Latency -->
@@ -397,6 +722,29 @@
                   <!-- Started At -->
                   <span class="text-xs text-gray-400">
                     {{ formatDateTime(result.started_at) }}
+                  </span>
+                </div>
+
+                <!-- Fingerprint verdict summary -->
+                <div
+                  v-if="result.verdict && (result.detected_model || result.expected_model || result.probability != null)"
+                  data-testid="result-fingerprint-summary"
+                  class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600 dark:text-gray-400"
+                >
+                  <span v-if="result.detected_model || result.expected_model">
+                    <span :title="result.detected_model_name || undefined">
+                      {{ t('admin.scheduledTests.detectedModel') }}: <span class="font-mono">{{ result.detected_model || '-' }}</span>
+                    </span>
+                    <span class="mx-1 text-gray-400">·</span>
+                    <span>
+                      {{ t('admin.scheduledTests.expectedModel') }}: <span class="font-mono">{{ result.expected_model || '-' }}</span>
+                    </span>
+                  </span>
+                  <span v-if="result.probability != null">
+                    {{ t('admin.scheduledTests.confidence') }} {{ formatProbability(result.probability) }}
+                  </span>
+                  <span v-if="matchNote(result)" class="text-violet-600 dark:text-violet-400" data-testid="result-match-note">
+                    {{ matchNote(result) }}
                   </span>
                 </div>
 
@@ -441,6 +789,30 @@
                     class="mt-1 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-gray-100 p-2 text-xs text-gray-700 dark:bg-dark-800 dark:text-gray-300"
                   >{{ result.response_text }}</pre>
                 </div>
+
+                <!-- Fingerprint detail (collapsible) -->
+                <div v-if="hasDetail(result)" class="mt-2">
+                  <div
+                    data-testid="result-detail-toggle"
+                    class="cursor-pointer text-xs font-medium text-indigo-600 dark:text-indigo-400"
+                    @click="toggleResultFingerprintDetail(result.id)"
+                  >
+                    {{ t('admin.scheduledTests.resultDetail') }}
+                    <Icon
+                      name="chevronDown"
+                      size="sm"
+                      :class="[
+                        'inline transition-transform duration-200',
+                        expandedDetailIds.has(result.id) ? 'rotate-180' : ''
+                      ]"
+                    />
+                  </div>
+                  <pre
+                    v-if="expandedDetailIds.has(result.id)"
+                    data-testid="result-detail-json"
+                    class="mt-1 max-h-64 overflow-auto whitespace-pre-wrap break-all rounded bg-indigo-50 p-2 text-xs text-gray-700 dark:bg-indigo-900/20 dark:text-gray-300"
+                  >{{ formatDetail(result.detail) }}</pre>
+                </div>
               </div>
             </div>
           </div>
@@ -463,7 +835,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onBeforeUnmount } from 'vue'
+import { ref, reactive, computed, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseDialog from '@/components/common/BaseDialog.vue'
 import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
@@ -475,7 +847,7 @@ import { Icon } from '@/components/icons'
 import { adminAPI } from '@/api/admin'
 import { useAppStore } from '@/stores/app'
 import { formatDateTime } from '@/utils/format'
-import type { ScheduledTestPlan, ScheduledTestResult } from '@/types'
+import type { ScheduledTestPlan, ScheduledTestResult, ScheduledTestDetectorConfig } from '@/types'
 
 const { t } = useI18n()
 const appStore = useAppStore()
@@ -505,17 +877,112 @@ watch(expandedPlanId, () => {
 }, { flush: 'sync' })
 onBeforeUnmount(() => { resultsRequestId++ })
 const expandedResultIds = reactive(new Set<number>())
+const expandedDetailIds = reactive(new Set<number>())
 const showAddForm = ref(false)
 const showDeleteConfirm = ref(false)
 const deletingPlan = ref<ScheduledTestPlan | null>(null)
 const editingPlanId = ref<number | null>(null)
 const updating = ref(false)
+type TestMode = ScheduledTestPlan['test_mode']
+
+// Form-side representation of detector_config: numeric fields are kept as
+// strings because <Input> emits strings; they are converted on submit.
+interface DetectorForm {
+  api: string
+  count: string
+  parallel: string
+  timeout_sec: string
+  rounds: string
+  no_stream: boolean
+  strict: boolean
+  effort: string
+  service_tier: string
+  allow_family_match: boolean
+}
+
+const DETECTOR_APIS: ScheduledTestDetectorConfig['api'][] = ['auto', 'responses', 'chat_completions', 'messages']
+const SERVICE_TIERS: ScheduledTestDetectorConfig['service_tier'][] = ['flex', 'default', 'fast', 'ultrafast']
+
+const defaultDetectorConfig = (): ScheduledTestDetectorConfig => ({
+  api: 'auto',
+  count: 3,
+  parallel: 3,
+  timeout_sec: 120,
+  rounds: 1,
+  no_stream: false,
+  strict: false,
+  effort: '',
+  service_tier: 'default',
+  allow_family_match: false
+})
+
+const toDetectorForm = (cfg?: Partial<ScheduledTestDetectorConfig> | null): DetectorForm => {
+  const merged = { ...defaultDetectorConfig(), ...(cfg ?? {}) }
+  return {
+    api: merged.api,
+    count: String(merged.count),
+    parallel: String(merged.parallel),
+    timeout_sec: String(merged.timeout_sec),
+    rounds: String(merged.rounds),
+    no_stream: !!merged.no_stream,
+    strict: !!merged.strict,
+    effort: merged.effort ?? '',
+    service_tier: merged.service_tier,
+    allow_family_match: !!merged.allow_family_match
+  }
+}
+
+const clampInt = (raw: string, min: number, max: number, fallback: number): number => {
+  const n = Math.trunc(Number(raw))
+  if (!Number.isFinite(n) || String(raw).trim() === '') return fallback
+  return Math.min(max, Math.max(min, n))
+}
+
+const fromDetectorForm = (form: DetectorForm): ScheduledTestDetectorConfig => {
+  const defaults = defaultDetectorConfig()
+  const strict = !!form.strict
+  return {
+    api: DETECTOR_APIS.includes(form.api as ScheduledTestDetectorConfig['api'])
+      ? (form.api as ScheduledTestDetectorConfig['api'])
+      : defaults.api,
+    // strict mode requires a complete 3/3 sample set
+    count: strict ? 3 : clampInt(form.count, 1, 3, defaults.count),
+    parallel: clampInt(form.parallel, 1, 3, defaults.parallel),
+    timeout_sec: clampInt(form.timeout_sec, 1, 600, defaults.timeout_sec),
+    rounds: clampInt(form.rounds, 1, 5, defaults.rounds),
+    no_stream: !!form.no_stream,
+    strict,
+    effort: (form.effort ?? '').trim(),
+    service_tier: SERVICE_TIERS.includes(form.service_tier as ScheduledTestDetectorConfig['service_tier'])
+      ? (form.service_tier as ScheduledTestDetectorConfig['service_tier'])
+      : defaults.service_tier,
+    allow_family_match: !!form.allow_family_match
+  }
+}
+
+const detectorApiOptions = computed<SelectOption[]>(() => [
+  { value: 'auto', label: t('admin.scheduledTests.detectorApiAuto') },
+  { value: 'responses', label: t('admin.scheduledTests.detectorApiResponses') },
+  { value: 'chat_completions', label: t('admin.scheduledTests.detectorApiChatCompletions') },
+  { value: 'messages', label: t('admin.scheduledTests.detectorApiMessages') }
+])
+
+const detectorServiceTierOptions = computed<SelectOption[]>(() => [
+  { value: 'flex', label: t('admin.scheduledTests.serviceTierFlex') },
+  { value: 'default', label: t('admin.scheduledTests.serviceTierDefault') },
+  { value: 'fast', label: t('admin.scheduledTests.serviceTierFast') },
+  { value: 'ultrafast', label: t('admin.scheduledTests.serviceTierUltrafast') }
+])
+
 const editForm = reactive({
   model_id: '' as string,
   cron_expression: '' as string,
   max_results: '100' as string,
   enabled: true,
-  auto_recover: false
+  auto_recover: false,
+  test_mode: 'liveness' as TestMode,
+  auto_disable: false,
+  detector: toDetectorForm()
 })
 
 const newPlan = reactive({
@@ -523,8 +990,14 @@ const newPlan = reactive({
   cron_expression: '' as string,
   max_results: '100' as string,
   enabled: true,
-  auto_recover: false
+  auto_recover: false,
+  test_mode: 'liveness' as TestMode,
+  auto_disable: false,
+  detector: toDetectorForm()
 })
+
+const newDetectorDisabled = computed(() => newPlan.test_mode !== 'fingerprint')
+const editDetectorDisabled = computed(() => editForm.test_mode !== 'fingerprint')
 
 const resetNewPlan = () => {
   newPlan.model_id = ''
@@ -532,6 +1005,9 @@ const resetNewPlan = () => {
   newPlan.max_results = '100'
   newPlan.enabled = true
   newPlan.auto_recover = false
+  newPlan.test_mode = 'liveness'
+  newPlan.auto_disable = false
+  newPlan.detector = toDetectorForm()
 }
 
 // Load plans when dialog opens
@@ -545,6 +1021,7 @@ watch(
       results.value = []
       expandedPlanId.value = null
       expandedResultIds.clear()
+      expandedDetailIds.clear()
       showAddForm.value = false
       showDeleteConfirm.value = false
     }
@@ -574,7 +1051,10 @@ const handleCreate = async () => {
       cron_expression: newPlan.cron_expression,
       enabled: newPlan.enabled,
       max_results: maxResults,
-      auto_recover: newPlan.auto_recover
+      auto_recover: newPlan.auto_recover,
+      test_mode: newPlan.test_mode,
+      auto_disable: newPlan.auto_disable,
+      detector_config: fromDetectorForm(newPlan.detector)
     })
     appStore.showSuccess(t('admin.scheduledTests.createSuccess'))
     showAddForm.value = false
@@ -607,6 +1087,9 @@ const startEdit = (plan: ScheduledTestPlan) => {
   editForm.max_results = String(plan.max_results)
   editForm.enabled = plan.enabled
   editForm.auto_recover = plan.auto_recover
+  editForm.test_mode = plan.test_mode === 'fingerprint' ? 'fingerprint' : 'liveness'
+  editForm.auto_disable = !!plan.auto_disable
+  editForm.detector = toDetectorForm(plan.detector_config)
 }
 
 const cancelEdit = () => {
@@ -622,7 +1105,10 @@ const handleEdit = async () => {
       cron_expression: editForm.cron_expression,
       max_results: Number(editForm.max_results) || 100,
       enabled: editForm.enabled,
-      auto_recover: editForm.auto_recover
+      auto_recover: editForm.auto_recover,
+      test_mode: editForm.test_mode,
+      auto_disable: editForm.auto_disable,
+      detector_config: fromDetectorForm(editForm.detector)
     })
     const index = plans.value.findIndex((p) => p.id === editingPlanId.value)
     if (index !== -1) {
@@ -640,6 +1126,65 @@ const handleEdit = async () => {
 const confirmDeletePlan = (plan: ScheduledTestPlan) => {
   deletingPlan.value = plan
   showDeleteConfirm.value = true
+}
+
+// ---------- result badges / detail helpers ----------
+const VERDICT_BADGES: Record<string, { cls: string; key: string }> = {
+  match: { cls: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400', key: 'admin.scheduledTests.verdictMatch' },
+  mismatch: { cls: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', key: 'admin.scheduledTests.verdictMismatch' },
+  invalid_reply: { cls: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', key: 'admin.scheduledTests.verdictInvalidReply' },
+  error: { cls: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', key: 'admin.scheduledTests.verdictError' },
+  unsupported: { cls: 'bg-gray-200 text-gray-700 dark:bg-dark-600 dark:text-gray-300', key: 'admin.scheduledTests.verdictUnsupported' },
+}
+
+const STATUS_BADGES: Record<string, { cls: string; key: string }> = {
+  success: { cls: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400', key: 'admin.scheduledTests.success' },
+  running: { cls: 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400', key: 'admin.scheduledTests.running' },
+  failed: { cls: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400', key: 'admin.scheduledTests.failed' },
+}
+
+const resultBadgeClass = (result: ScheduledTestResult): string => {
+  const badge = (result.verdict && VERDICT_BADGES[result.verdict]) || STATUS_BADGES[result.status] || STATUS_BADGES.failed
+  return badge.cls
+}
+
+const resultBadgeLabel = (result: ScheduledTestResult): string => {
+  const badge = (result.verdict && VERDICT_BADGES[result.verdict]) || STATUS_BADGES[result.status] || STATUS_BADGES.failed
+  return t(badge.key)
+}
+
+const formatProbability = (probability: number): string => `${Math.round(probability * 100)}%`
+
+const matchNote = (result: ScheduledTestResult): string => {
+  const detail = result.detail as Record<string, unknown> | null
+  const expectation = detail && typeof detail === 'object' ? (detail as Record<string, unknown>).expectation : null
+  if (!expectation || typeof expectation !== 'object') return ''
+  const meta = expectation as Record<string, unknown>
+  if (meta.matched_via === 'alias') return t('admin.scheduledTests.matchedViaAlias')
+  if (meta.matched_via === 'family') return t('admin.scheduledTests.matchedViaFamily')
+  return ''
+}
+
+const hasDetail = (result: ScheduledTestResult): boolean => {
+  if (result.detail == null) return false
+  if (typeof result.detail === 'object') return Object.keys(result.detail).length > 0
+  return true
+}
+
+const formatDetail = (detail: ScheduledTestResult['detail']): string => {
+  try {
+    return JSON.stringify(detail, null, 2)
+  } catch {
+    return String(detail)
+  }
+}
+
+const toggleResultFingerprintDetail = (resultId: number) => {
+  if (expandedDetailIds.has(resultId)) {
+    expandedDetailIds.delete(resultId)
+  } else {
+    expandedDetailIds.add(resultId)
+  }
 }
 
 const handleDelete = async () => {
@@ -667,7 +1212,6 @@ const toggleExpand = async (planId: number) => {
     expandedResultIds.clear()
     return
   }
-
   expandedPlanId.value = planId
   expandedResultIds.clear()
   loadingResults.value = true

@@ -20,20 +20,26 @@ func NewScheduledTestHandler(scheduledTestSvc *service.ScheduledTestService) *Sc
 }
 
 type createScheduledTestPlanRequest struct {
-	AccountID      int64  `json:"account_id" binding:"required"`
-	ModelID        string `json:"model_id"`
-	CronExpression string `json:"cron_expression" binding:"required"`
-	Enabled        *bool  `json:"enabled"`
-	MaxResults     int    `json:"max_results"`
-	AutoRecover    *bool  `json:"auto_recover"`
+	AccountID      int64                   `json:"account_id" binding:"required"`
+	ModelID        string                  `json:"model_id"`
+	CronExpression string                  `json:"cron_expression" binding:"required"`
+	Enabled        *bool                   `json:"enabled"`
+	MaxResults     int                     `json:"max_results"`
+	AutoRecover    *bool                   `json:"auto_recover"`
+	TestMode       string                  `json:"test_mode"`
+	AutoDisable    *bool                   `json:"auto_disable"`
+	DetectorConfig *service.DetectorConfig `json:"detector_config"`
 }
 
 type updateScheduledTestPlanRequest struct {
-	ModelID        string `json:"model_id"`
-	CronExpression string `json:"cron_expression"`
-	Enabled        *bool  `json:"enabled"`
-	MaxResults     int    `json:"max_results"`
-	AutoRecover    *bool  `json:"auto_recover"`
+	ModelID        string                  `json:"model_id"`
+	CronExpression string                  `json:"cron_expression"`
+	Enabled        *bool                   `json:"enabled"`
+	MaxResults     int                     `json:"max_results"`
+	AutoRecover    *bool                   `json:"auto_recover"`
+	TestMode       *string                 `json:"test_mode"`
+	AutoDisable    *bool                   `json:"auto_disable"`
+	DetectorConfig *service.DetectorConfig `json:"detector_config"`
 }
 
 // ListByAccount GET /admin/accounts/:id/scheduled-test-plans
@@ -60,18 +66,39 @@ func (h *ScheduledTestHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// Empty test_mode falls back to liveness; invalid values are rejected early.
+	testMode, err := service.NormalizeTestMode(req.TestMode)
+	if err != nil {
+		response.BadRequest(c, err.Error())
+		return
+	}
+
+	detectorConfig := service.DefaultDetectorConfig()
+	if req.DetectorConfig != nil {
+		detectorConfig, err = service.NormalizeDetectorConfig(*req.DetectorConfig)
+		if err != nil {
+			response.BadRequest(c, "invalid detector_config: "+err.Error())
+			return
+		}
+	}
+
 	plan := &service.ScheduledTestPlan{
 		AccountID:      req.AccountID,
 		ModelID:        req.ModelID,
 		CronExpression: req.CronExpression,
 		Enabled:        true,
 		MaxResults:     req.MaxResults,
+		TestMode:       testMode,
+		DetectorConfig: detectorConfig,
 	}
 	if req.Enabled != nil {
 		plan.Enabled = *req.Enabled
 	}
 	if req.AutoRecover != nil {
 		plan.AutoRecover = *req.AutoRecover
+	}
+	if req.AutoDisable != nil {
+		plan.AutoDisable = *req.AutoDisable
 	}
 
 	created, err := h.scheduledTestSvc.CreatePlan(c.Request.Context(), plan)
@@ -116,6 +143,27 @@ func (h *ScheduledTestHandler) Update(c *gin.Context) {
 	}
 	if req.AutoRecover != nil {
 		existing.AutoRecover = *req.AutoRecover
+	}
+	if req.TestMode != nil {
+		testMode, err := service.NormalizeTestMode(*req.TestMode)
+		if err != nil {
+			response.BadRequest(c, err.Error())
+			return
+		}
+		existing.TestMode = testMode
+	}
+	if req.AutoDisable != nil {
+		existing.AutoDisable = *req.AutoDisable
+	}
+	// Omitted detector_config keeps the stored value; an explicit object (even {})
+	// replaces it and is normalised with defaults.
+	if req.DetectorConfig != nil {
+		detectorConfig, err := service.NormalizeDetectorConfig(*req.DetectorConfig)
+		if err != nil {
+			response.BadRequest(c, "invalid detector_config: "+err.Error())
+			return
+		}
+		existing.DetectorConfig = detectorConfig
 	}
 
 	updated, err := h.scheduledTestSvc.UpdatePlan(c.Request.Context(), existing)

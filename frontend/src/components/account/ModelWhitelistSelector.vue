@@ -112,6 +112,18 @@
         {{ isSyncingUpstream ? t('admin.accounts.syncUpstreamModelsLoading') : t('admin.accounts.syncUpstreamModels') }}
       </button>
       <button
+        v-if="showFingerprintButton && hasValidAccountId"
+        type="button"
+        data-testid="run-model-fingerprint"
+        :disabled="!canRunFingerprint"
+        :title="fingerprintButtonTitle"
+        @click="openFingerprintDialog"
+        class="inline-flex items-center gap-1 rounded-lg border border-violet-200 px-3 py-1.5 text-sm text-violet-600 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-violet-800 dark:text-violet-400 dark:hover:bg-violet-900/30"
+      >
+        <Icon name="shield" size="sm" />
+        {{ t('admin.accounts.modelFingerprintBatch.button') }}
+      </button>
+      <button
         type="button"
         @click="clearAll"
         class="rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/30"
@@ -142,6 +154,15 @@
         </button>
       </div>
     </div>
+
+    <ModelFingerprintBatchDialog
+      v-if="fingerprintDialogMounted"
+      :show="showFingerprintDialog"
+      :account-id="accountId"
+      :models="fingerprintModels"
+      @close="showFingerprintDialog = false"
+      @run-finished="handleFingerprintRunFinished"
+    />
   </div>
 </template>
 
@@ -154,6 +175,8 @@ import type { SyncUpstreamPreviewParams } from '@/api/admin/accounts'
 import { useClipboard } from '@/composables/useClipboard'
 import ModelIcon from '@/components/common/ModelIcon.vue'
 import Icon from '@/components/icons/Icon.vue'
+import ModelFingerprintBatchDialog from '@/components/account/ModelFingerprintBatchDialog.vue'
+import type { ModelFingerprintBatchRun } from '@/types'
 import { allModels, getModelsByPlatform } from '@/composables/useModelWhitelist'
 import { supportsUpstreamModelSync } from '@/constants/platformCatalog'
 import { extractApiErrorMessage } from '@/utils/apiError'
@@ -173,12 +196,14 @@ const props = withDefaults(defineProps<{
     api_key: string
   }
   showSyncButton?: boolean
-}>(), { showSyncButton: true })
+  showFingerprintButton?: boolean
+}>(), { showSyncButton: true, showFingerprintButton: true })
 
 const emit = defineEmits<{
   'update:modelValue': [value: string[]]
   'upstream-synced': []
   'upstream-sync-finished': []
+  'fingerprint-run-finished': [run: ModelFingerprintBatchRun]
 }>()
 
 const appStore = useAppStore()
@@ -384,7 +409,45 @@ const syncUpstreamModels = async () => {
   }
 }
 
-defineExpose({ syncUpstreamModels, isSyncingUpstream })
+// ---------- batch model fingerprint test ----------
+const fingerprintDialogMounted = ref(false)
+const showFingerprintDialog = ref(false)
+const fingerprintModels = ref<string[]>([])
+
+const hasValidAccountId = computed(() =>
+  typeof props.accountId === 'number' && Number.isFinite(props.accountId) && props.accountId > 0
+)
+
+const canRunFingerprint = computed(() =>
+  props.showFingerprintButton && hasValidAccountId.value && props.modelValue.length > 0
+)
+
+const fingerprintButtonTitle = computed(() => {
+  if (!hasValidAccountId.value) return t('admin.accounts.modelFingerprintBatch.buttonRequiresAccount')
+  if (props.modelValue.length === 0) return t('admin.accounts.modelFingerprintBatch.buttonRequiresModels')
+  return t('admin.accounts.modelFingerprintBatch.buttonHint')
+})
+
+const openFingerprintDialog = () => {
+  if (!canRunFingerprint.value) return
+  // Snapshot the CURRENT (possibly unsaved) whitelist.
+  fingerprintModels.value = [...props.modelValue]
+  fingerprintDialogMounted.value = true
+  showFingerprintDialog.value = true
+}
+
+const handleFingerprintRunFinished = (run: ModelFingerprintBatchRun) => {
+  emit('fingerprint-run-finished', run)
+}
+
+watch(
+  () => props.accountId,
+  () => {
+    showFingerprintDialog.value = false
+  }
+)
+
+defineExpose({ syncUpstreamModels, isSyncingUpstream, openFingerprintDialog })
 
 const clearAll = () => {
   emit('update:modelValue', [])

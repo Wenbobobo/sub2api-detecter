@@ -114,6 +114,9 @@ func RegisterAdminRoutes(
 		// 定时测试计划
 		registerScheduledTestRoutes(admin, h)
 
+		// 批量模型指纹测试（账号白名单）
+		registerModelFingerprintBatchRoutes(admin, h)
+
 		// 渠道管理
 		registerChannelRoutes(admin, h)
 
@@ -739,6 +742,16 @@ func registerScheduledTestRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
 	}
 	// Nested under accounts
 	admin.GET("/accounts/:id/scheduled-test-plans", h.Admin.ScheduledTest.ListByAccount)
+}
+
+func registerModelFingerprintBatchRoutes(admin *gin.RouterGroup, h *handler.Handlers) {
+	runs := admin.Group("/accounts/:id/model-fingerprint-runs")
+	{
+		runs.POST("", h.Admin.ModelFingerprintBatch.Create)
+		runs.GET("", h.Admin.ModelFingerprintBatch.List)
+		runs.GET("/:runId", h.Admin.ModelFingerprintBatch.Get)
+		runs.POST("/:runId/cancel", h.Admin.ModelFingerprintBatch.Cancel)
+	}
 }
 
 func registerErrorPassthroughRoutes(admin *gin.RouterGroup, h *handler.Handlers) {

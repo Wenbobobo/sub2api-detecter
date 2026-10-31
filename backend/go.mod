@@ -27,8 +27,9 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-plugin v1.8.0
+	github.com/Ikaleio/lm-detector/sdk/go v0.2.0
 	github.com/imroc/req/v3 v3.59.0
-	github.com/klauspost/compress v1.18.2
+	github.com/klauspost/compress v1.18.4
 	github.com/lib/pq v1.10.9
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pquerna/otp v1.5.0

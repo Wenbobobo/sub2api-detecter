@@ -106,6 +106,7 @@ type Config struct {
 	BatchImage              BatchImageConfig              `mapstructure:"batch_image"`
 	ImageStorage            ImageStorageConfig            `mapstructure:"image_storage"`
 	Plugins                 PluginConfig                  `mapstructure:"plugins"`
+	Fingerprint             FingerprintConfig             `mapstructure:"fingerprint"`
 
 	// Enforce only API-key spending windows in simple mode.
 	SimpleModeKeyRateLimitEnabled bool `mapstructure:"simple_mode_key_rate_limit_enabled" yaml:"simple_mode_key_rate_limit_enabled"`
@@ -125,6 +126,27 @@ type PluginConfig struct {
 	MaxUploadBytes       int64             `mapstructure:"max_upload_bytes"`
 	MaxUncompressedBytes int64             `mapstructure:"max_uncompressed_bytes"`
 	StartTimeoutSeconds  int               `mapstructure:"start_timeout_seconds"`
+}
+
+// FingerprintConfig controls the lm-detector model-fingerprint integration used by
+// scheduled account tests (`test_mode=fingerprint`).
+//
+// The detector reference bank is loaded lazily on first use. Configuring
+// FINGERPRINT_DATA_DIR (a directory holding unified_bank.json and
+// shared_detector.bin) keeps detection fully offline; otherwise the Go SDK
+// downloads the published bank and caches it under the OS cache directory.
+type FingerprintConfig struct {
+	// Enabled disables the feature entirely when false: fingerprint plans then
+	// report `unsupported` instead of contacting the upstream.
+	Enabled bool `mapstructure:"enabled"`
+	// DataDir is an optional local reference-bank directory. It takes priority
+	// over DataSources and never touches the network.
+	DataDir string `mapstructure:"data_dir"`
+	// DataSources is a comma separated list of mirror base URLs tried in order.
+	// Empty means the lm-detector SDK defaults.
+	DataSources string `mapstructure:"data_sources"`
+	// CacheFile overrides the SDK cache file path (empty means OS cache dir).
+	CacheFile string `mapstructure:"cache_file"`
 }
 
 type LogConfig struct {
@@ -2041,6 +2063,11 @@ func configureConfigSource(setConfigFile, addConfigPath func(string)) {
 func setDefaults() {
 	viper.SetDefault("run_mode", RunModeStandard)
 	viper.SetDefault("gateway.min_output_tokens", 128)
+	// Model fingerprint (lm-detector) integration.
+	viper.SetDefault("fingerprint.enabled", true)
+	viper.SetDefault("fingerprint.data_dir", "")
+	viper.SetDefault("fingerprint.data_sources", "")
+	viper.SetDefault("fingerprint.cache_file", "")
 	viper.SetDefault("simple_mode.auto_create_default_groups", true)
 	viper.SetDefault("simple_mode_key_rate_limit_enabled", false)
 
